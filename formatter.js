@@ -8,32 +8,35 @@ function formatLongExpression(expression) {
     return "\n" + " ".repeat(indentLevel * indentSize);
   };
   // First create a boolean array the same length as the expression
-  let isCast = new Array(expression.length).fill(false);
+  let isFunc = new Array(expression.length).fill(false);
+  let stack = [];
   for (let i = 0; i < expression.length; i++) {
     if (expression[i] === "(") {
-      //Distinguish between function call and cast
+      //Distinguish between function call or other parenthesis
       //Check if the previous character is a letter or number
-      if (i == 0 || (i > 0 && !/[a-zA-Z0-9_]/.test(expression[i - 1]))) {
-        isCast[i] = true;
-        castLevel++;
+      if (i > 0 && /[a-zA-Z0-9_]/.test(expression[i - 1])) {
+        isFunc[i] = true;
       }
+      stack.push(i);
     } else if (expression[i] === ")") {
-      if (castLevel > 0) {
-        isCast[i] = true;
-        castLevel--;
+      if (isFunc[stack.pop()]) {
+        isFunc[i] = true;
       }
     }
   }
+  console.log(isFunc);
   let isAFunctionParenthesis1 = (i) => {
-    if (expression[i] === "(") return isCast[i] === false;
+    if (expression[i] === "[") return true;
+    if (expression[i] === "(") return isFunc[i];
     return false;
   };
   let isAFunctionParenthesis2 = (i) => {
-    if (expression[i] === ")") return isCast[i] === false;
+    if (expression[i] === "]") return true;
+    if (expression[i] === ")") return isFunc[i];
     return false;
   };
   for (let i = 0; i < expression.length; i++) {
-    if (expression[i] === " ") continue;
+    if (expression[i] === "\n") continue;
     if (isAFunctionParenthesis1(i)) {
       //look ahead to see if the expression is not complex, do not indent
       //A expression is not complex only if it has no comma and no nested call
